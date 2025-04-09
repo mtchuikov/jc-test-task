@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5"
+	"github.com/mtchuikov/jc-test-task/internal/config"
 	v1handlers "github.com/mtchuikov/jc-test-task/internal/handlers/v1"
 	"github.com/mtchuikov/jc-test-task/internal/repo/postgres"
 	"github.com/mtchuikov/jc-test-task/internal/services"
@@ -19,8 +20,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
-
-const pgConnURL = "postgres://user:password@127.0.0.1:5432/postgres?sslmode=disable"
 
 func main() {
 	rootCtx := context.Background()
@@ -36,6 +35,8 @@ func main() {
 		cancel()
 	}()
 
+	config.Init()
+
 	zerolog.LevelFieldName = "lvl"
 	zerolog.ErrorFieldName = "err"
 	zerolog.MessageFieldName = "msg"
@@ -43,7 +44,8 @@ func main() {
 
 	log.Logger = log.Logger.
 		Level(zerolog.InfoLevel).With().
-		Timestamp().Logger()
+		Timestamp().Str("app", config.ServiceName()).
+		Logger()
 
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer)
@@ -54,7 +56,7 @@ func main() {
 	apiV1Router := chi.NewRouter()
 	router.Mount("/api/v1", apiV1Router)
 
-	pgConn, err := pgx.Connect(rootCtx, pgConnURL)
+	pgConn, err := pgx.Connect(rootCtx, config.DBConnURL())
 	if err != nil {
 		log.Fatal().Err(err).Send()
 	}
@@ -77,7 +79,7 @@ func main() {
 	v1handlers.RegisterGetBalance(apiV1Router, balanceGetter)
 
 	server := http.Server{
-		Addr:         "127.0.0.1:8080",
+		Addr:         config.ServerAddr(),
 		Handler:      router,
 		ReadTimeout:  3 * time.Second,
 		WriteTimeout: 3 * time.Second,

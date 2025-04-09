@@ -1,16 +1,28 @@
 package config
 
-var conf config = config{ServiceName: "shortener"}
+import "github.com/caarlos0/env/v11"
+
+var conf config = config{ServiceName: "js-test-task"}
 
 type config struct {
 	ServiceName string
 	ServerAddr  string `env:"SERVER_ADDRESS"`
+	DBConnURL   string `env:"DB_CONN_URL"`
+}
+
+func Init() {
+	conf.loadFromFlags()
+	env.Parse(&conf)
+}
+
+func ServiceName() string {
+	return conf.ServiceName
 }
 
 func ServerAddr() string {
-	return ""
+	return conf.ServerAddr
 }
 
-func Verbose() bool {
-	return true
+func DBConnURL() string {
+	return conf.DBConnURL
 }
