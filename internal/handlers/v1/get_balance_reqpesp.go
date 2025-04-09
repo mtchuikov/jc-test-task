@@ -8,16 +8,16 @@ import (
 )
 
 type getBalanceData struct {
-	WalletID  string     `json:"walletId"`
-	Balance   float64    `json:"balance"`
-	Timestamp *time.Time `json:"timestamp"`
+	WalletID  string    `json:"walletId"`
+	Balance   float64   `json:"balance"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 func newGetBalanceData(balance entities.Balance) *getBalanceData {
 	return &getBalanceData{
 		WalletID:  string(uuid.UUID(balance.WalletID).String()),
 		Balance:   balance.Balance,
-		Timestamp: &balance.Timestamp,
+		Timestamp: balance.Timestamp,
 	}
 }
 

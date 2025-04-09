@@ -1,15 +1,16 @@
 version: "3"
 
 networks:
-  js-test-task:
+  jc-test-task:
 
 services:
   account-service:
     build:
       context: .
       dockerfile: Dockerfile
+    command: --server.addr 0.0.0.0:8080
     networks:
-      - js-test-task
+      - jc-test-task
     ports:
       - 127.0.0.1:8080:8080
     depends_on:
@@ -19,10 +20,28 @@ services:
     image: postgres:latest
     container_name: postgres
     networks:
-      - js-test-task
+      - jc-test-task
     ports:
       - 127.0.0.1:5432:5432
     environment:
       POSTGRES_USER: username
       POSTGRES_PASSWORD: password 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
       
+  migrate:
+    image: migrate/migrate:latest
+    container_name: migrate
+    command: |
+      -path /migrations
+      -database postgres://username:password@postgres:5432/postgres?sslmode=disable,
+      up
+    networks:
+      - jc-test-task
+    volumes:
+      - ./sql/migrations:/migrations
+    depends_on:
+      - postgres

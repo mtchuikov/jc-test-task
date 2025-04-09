@@ -80,6 +80,6 @@ func (h *transact) Handle(rw http.ResponseWriter, req *http.Request) {
 
 	resp.statusCode = http.StatusOK
 	resp.respData.Success = true
-	resp.respData.Msg = transactionCompletedMsg
+	resp.respData.Msg = txCompletedMsg
 	resp.respData.Data = newTransactionResponseData(newTx)
 }

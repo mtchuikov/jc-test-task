@@ -36,7 +36,7 @@ func (s *balanceGetter) Serve(
 	balance, err := s.repo.GetLastBalance(ctx, walletID)
 	if err != nil {
 		s.log.Error().Err(err).Str("op", balanceGetterServeOp).
-			Msg("failed to insert tx")
+			Msg("failed to get balance")
 	}
 
 	return balance, nil

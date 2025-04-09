@@ -94,7 +94,7 @@ func main() {
 		},
 	})
 
-	log.Info().Msg("listening http server...")
+	log.Info().Str("addr", config.ServerAddr()).Msg("listening http server...")
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {

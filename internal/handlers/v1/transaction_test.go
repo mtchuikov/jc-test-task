@@ -91,7 +91,7 @@ func (s *testTransactSuite) TestTransaction_Success() {
 		testTransactArgs{
 			ExpecteCode:        http.StatusOK,
 			ExpecteSuccess:     true,
-			ExpecteMsgContains: transactionCompletedMsg,
+			ExpecteMsgContains: txCompletedMsg,
 		})
 }
 

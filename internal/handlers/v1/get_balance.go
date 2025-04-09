@@ -47,6 +47,6 @@ func (h *getBalance) Handle(rw http.ResponseWriter, req *http.Request) {
 
 	resp.statusCode = http.StatusOK
 	resp.respData.Success = true
-	resp.respData.Msg = balanceGotMsg
+	resp.respData.Msg = balanceGotFetchedMsg
 	resp.respData.Data = newGetBalanceData(balance)
 }

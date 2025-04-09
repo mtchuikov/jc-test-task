@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -30,12 +32,14 @@ func (b *balances) GetLastBalance(
 	pgxBalance, err := b.querier.GetLastBalance(ctx, pgxWalletID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			balance.Balance = 0
+			balance.WalletID = walletID
+			balance.Timestamp = time.Now().UTC()
 			return balance, nil
 		}
 
-		return balance, ErrFailedToGetBalance
+		err = fmt.Errorf("%w: %s", ErrFailedToGetBalance, err)
+		return balance, err
 	}
 
-	return pgxBalanceToBalance(pgxBalance), err
+	return pgxBalanceToBalance(pgxBalance), nil
 }

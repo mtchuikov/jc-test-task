@@ -2,7 +2,7 @@
 
 ## Запуск программы
 
-Программа может быть запущена при помощи команды `docker compose up`. Эта команда запустит в Docker базу данных Postgres, а также экземпляр приложения. Кроме того, перед началом работы также необходимо выполнить создание необходимых схем, функций и т.п. в базе данных. Это можно сделать при помощи команды: `TODO`
+Программа может быть запущена при помощи команды `docker compose up`. Эта команда запустит в Docker базу данных Postgres, создаст в ней необходимые таблицы, функции и т.п. при помощи инструмента [migrate](https://github.com/golang-migrate/migrate).
 
 ## Конфигурация
 
@@ -10,6 +10,6 @@
 
 | Flag | Shorthand | Default value | Description |
 |------|-----------|---------------|-------------|
-| `--server-addr`| `-a` | `SERVER_ADDRESS` | `127.0.0.1:8080` | Specify the IP address and port for the server to listen on |
-| `--dsn` | `-d` | `DB_CONN_URL` | `postgres://username:password@postgres:5432/postgres?sslmode=disable` |  Define the database DSN (Data Source Name) used to connect to the database |
+| `--server.addr` | `SERVER_ADDRESS` | `127.0.0.1:8080` | IP address and port for the server to listen on |
+| `--db.conn.url` | `DB_CONN_URL` | `postgres://username:password@postgres:5432/postgres?sslmode=disable` |  URL to connect to the Postgres database |
 | `--help` | `-h` | | Print information about supported flags |
