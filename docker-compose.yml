@@ -1,0 +1,27 @@
+version: "3"
+
+networks:
+  js-test-task:
+
+services:
+  account-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    networks:
+      - js-test-task
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    networks:
+      - js-test-task
+    ports:
+      - 127.0.0.1:5432:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password 

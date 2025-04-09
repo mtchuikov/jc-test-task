@@ -1,0 +1,22 @@
+version: "2"
+
+sql:
+  - schema: sql/migrations/transactions.v1.sql
+    queries: sql/queries/transactions.v1.sql
+    engine: postgresql
+    gen:
+      go:
+        package: v1txs
+        out: internal/gen/sqlc/txs/v1
+        sql_package: pgx/v5
+        sql_driver: github.com/jackc/pgx/v5
+
+  - schema: sql/migrations/balances.v1.sql
+    queries: sql/queries/balances.v1.sql
+    engine: postgresql
+    gen:
+      go:
+        package: v1balances
+        out: internal/gen/sqlc/balances/v1
+        sql_package: pgx/v5
+        sql_driver: github.com/jackc/pgx/v5
