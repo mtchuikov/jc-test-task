@@ -1,5 +1,3 @@
-version: "3"
-
 networks:
   jc-test-task:
 
@@ -37,7 +35,7 @@ services:
     container_name: migrate
     command: |
       -path /migrations
-      -database postgres://username:password@postgres:5432/postgres?sslmode=disable,
+      -database postgres://username:password@postgres:5432/postgres?sslmode=disable
       up
     networks:
       - jc-test-task

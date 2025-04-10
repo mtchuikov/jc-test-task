@@ -1,7 +1,7 @@
 version: "2"
 
 sql:
-  - schema: sql/migrations/transactions.v1.sql
+  - schema: sql/migrations/20250409183603_transactions.v1.up.sql
     queries: sql/queries/transactions.v1.sql
     engine: postgresql
     gen:
@@ -11,7 +11,7 @@ sql:
         sql_package: pgx/v5
         sql_driver: github.com/jackc/pgx/v5
 
-  - schema: sql/migrations/balances.v1.sql
+  - schema: sql/migrations/20250409183543_balances.v1.up.sql
     queries: sql/queries/balances.v1.sql
     engine: postgresql
     gen:
