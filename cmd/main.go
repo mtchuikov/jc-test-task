@@ -71,12 +71,20 @@ func main() {
 	})
 
 	txsRepo := postgres.NewTransactions(pgConn)
-	transactor := services.NewTransactor(log.Logger, txsRepo)
-	v1handlers.RegisterTransact(apiV1Router, transactor)
+	v1handlers.RegisterTransact(
+		v1handlers.RegisterTransactParams{
+			Log:        log.Logger,
+			Transactor: services.NewTransactor(log.Logger, txsRepo),
+			Router:     apiV1Router,
+		})
 
 	balancesRepo := postgres.NewBalances(pgConn)
-	balanceGetter := services.NewBalanceGetter(log.Logger, balancesRepo)
-	v1handlers.RegisterGetBalance(apiV1Router, balanceGetter)
+	v1handlers.RegisterGetBalance(
+		v1handlers.RegisterGetBalanceParams{
+			Log:             log.Logger,
+			BabalanceGetter: services.NewBalanceGetter(log.Logger, balancesRepo),
+			Router:          apiV1Router,
+		})
 
 	server := http.Server{
 		Addr:         config.ServerAddr(),

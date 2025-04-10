@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	jsoniter "github.com/json-iterator/go"
@@ -30,9 +29,10 @@ func (m *mockTransactor) Serve(
 
 type testTransactSuite struct {
 	suite.Suite
-	transact transact
-	reqData  TransactRequest
-	rr       *httptest.ResponseRecorder
+	transact   transact
+	transactor *mockTransactor
+	reqData    *TransactRequest
+	rr         *httptest.ResponseRecorder
 }
 
 func TestTransactionSuite(t *testing.T) {
@@ -40,10 +40,10 @@ func TestTransactionSuite(t *testing.T) {
 }
 
 func (s *testTransactSuite) SetupTest() {
-	transactor := &mockTransactor{}
-	s.transact = transact{transactor}
+	s.transactor = &mockTransactor{}
+	s.transact = transact{transactor: s.transactor}
 
-	s.reqData = TransactRequest{
+	s.reqData = &TransactRequest{
 		WalletID:      "c1caa508-6a7b-4381-bcca-afca5ab8ad8f",
 		OperationType: vobjects.DepositTx,
 		Amount:        1337,
@@ -117,13 +117,14 @@ func (s *testTransactSuite) TestTransaction_InvalidOperationType() {
 		})
 }
 
-func (s *testTransactSuite) TestTransaction_InvalidLargeBody() {
-	s.reqData.WalletID = strings.Repeat("large body", 2048)
+func (s *testTransactSuite) TestTransaction_InvalidAmount() {
+	s.reqData.Amount = 0
 
 	s.testTransact(
 		testTransactArgs{
 			ExpecteCode:        http.StatusBadRequest,
 			ExpecteSuccess:     false,
-			ExpecteMsgContains: transactPayloadTooLarge,
+			ExpecteMsgContains: vobjects.ErrInvalidAmount.Error(),
 		})
+
 }

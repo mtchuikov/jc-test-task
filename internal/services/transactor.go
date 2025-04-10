@@ -32,16 +32,12 @@ func (s *transactor) Serve(ctx context.Context, tx vobjects.Transaction) (
 	newTx entities.Transaction,
 	err error,
 ) {
-	if tx.Amount <= 0 {
-		return newTx, ErrTxAmountLessOrEqualToZero
-	}
-
 	newTx, err = s.repo.InsertTransaction(ctx, tx)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			s.log.Error().Err(err).Str("op", transactorServeOp).
-				Msg("failed to insert tx")
+				Msg("failed to insert transaction")
 		}
 	}
 

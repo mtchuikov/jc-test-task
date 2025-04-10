@@ -5,13 +5,13 @@ import (
 	"errors"
 	"io"
 
-	"fmt"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mtchuikov/jc-test-task/internal/domain/entities"
 	"github.com/mtchuikov/jc-test-task/internal/domain/vobjects"
+	"github.com/rs/zerolog"
 )
 
 type transactor interface {
@@ -19,22 +19,33 @@ type transactor interface {
 }
 
 type transact struct {
+	log        zerolog.Logger
 	transactor transactor
 }
 
-func RegisterTransact(router chi.Router, transactor transactor) {
-	handler := transact{transactor}
-	router.Post("/wallet", handler.Handle)
+type RegisterTransactParams struct {
+	Log        zerolog.Logger
+	Transactor transactor
+	Router     chi.Router
+}
+
+func RegisterTransact(args RegisterTransactParams) {
+	handler := transact{
+		log:        args.Log,
+		transactor: args.Transactor,
+	}
+
+	args.Router.Post("/wallet", handler.Handle)
 }
 
 const transactMaxPayloadSize = 2048
 
-var transactPayloadTooLarge = fmt.Sprintf(payloadTooLarge, transactMaxPayloadSize)
+const transactHandlerOp = "handlers.transact.handle"
 
 func (h *transact) Handle(rw http.ResponseWriter, req *http.Request) {
 	resp := &prepareResponseArgs[TransactResponse]{
 		statusCode: http.StatusBadRequest,
-		respData:   &TransactResponse{},
+		response:   &TransactResponse{},
 	}
 	defer prepareResponse(rw, resp)
 
@@ -43,9 +54,9 @@ func (h *transact) Handle(rw http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		var maxBytesError *http.MaxBytesError
 		if errors.As(err, &maxBytesError) {
-			resp.respData.Msg = transactPayloadTooLarge
+			resp.response.Msg = payloadTooLarge
 		} else {
-			resp.respData.Msg = invalidRequestBody
+			resp.response.Msg = invalidRequestBody
 		}
 
 		return
@@ -54,7 +65,7 @@ func (h *transact) Handle(rw http.ResponseWriter, req *http.Request) {
 	var reqData TransactRequest
 	err = jsoniter.Unmarshal(payload, &reqData)
 	if err != nil {
-		resp.respData.Msg = invalidPayloadFormatMsg
+		resp.response.Msg = invalidPayloadMsg
 		return
 	}
 
@@ -65,21 +76,31 @@ func (h *transact) Handle(rw http.ResponseWriter, req *http.Request) {
 			Amount:        reqData.Amount,
 		})
 	if err != nil {
-		resp.respData.Msg = err.Error()
+		statusCode, msg, err := domainErrorToCodeAndMsg(err)
+		if err != nil {
+			logUnexpectedError(h.log, err, transactHandlerOp)
+		}
+
+		resp.statusCode = statusCode
+		resp.response.Msg = msg
 		return
 	}
 
 	ctx := req.Context()
 	newTx, err := h.transactor.Serve(ctx, tx)
 	if err != nil {
-		statusCode, msg := serviceErrorToCodeAndMsg(err)
+		statusCode, msg, err := serviceErrorToCodeAndMsg(err)
+		if err != nil {
+			logUnexpectedError(h.log, err, transactHandlerOp)
+		}
+
 		resp.statusCode = statusCode
-		resp.respData.Msg = msg
+		resp.response.Msg = msg
 		return
 	}
 
 	resp.statusCode = http.StatusOK
-	resp.respData.Success = true
-	resp.respData.Msg = txCompletedMsg
-	resp.respData.Data = newTransactionResponseData(newTx)
+	resp.response.Success = true
+	resp.response.Msg = txCompletedMsg
+	resp.response.Data = newTransactionResponseData(newTx)
 }

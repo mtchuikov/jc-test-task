@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/mtchuikov/jc-test-task/internal/domain/entities"
 	"github.com/mtchuikov/jc-test-task/internal/domain/vobjects"
+	"github.com/rs/zerolog"
 )
 
 type balanceGetter interface {
@@ -14,39 +15,60 @@ type balanceGetter interface {
 }
 
 type getBalance struct {
+	log           zerolog.Logger
 	balanceGetter balanceGetter
 }
 
-func RegisterGetBalance(router chi.Router, babalanceGetter balanceGetter) {
-	handler := getBalance{babalanceGetter}
-	router.Get("/wallet/{wallet_uuid}", handler.Handle)
+type RegisterGetBalanceParams struct {
+	Log             zerolog.Logger
+	BabalanceGetter balanceGetter
+	Router          chi.Router
+}
+
+func RegisterGetBalance(args RegisterGetBalanceParams) {
+	handler := getBalance{
+		log:           args.Log,
+		balanceGetter: args.BabalanceGetter,
+	}
+
+	args.Router.Get("/wallet/{wallet_uuid}", handler.Handle)
 }
 
 func (h *getBalance) Handle(rw http.ResponseWriter, req *http.Request) {
 	resp := &prepareResponseArgs[GetBalanceResponse]{
 		statusCode: http.StatusBadRequest,
-		respData:   &GetBalanceResponse{},
+		response:   &GetBalanceResponse{},
 	}
 	defer prepareResponse(rw, resp)
 
 	id := chi.URLParam(req, "wallet_uuid")
 	walletID, err := vobjects.NewWalletID(id)
 	if err != nil {
-		resp.respData.Msg = vobjects.ErrInvalidWalletID.Error()
+		statusCode, msg, err := domainErrorToCodeAndMsg(err)
+		if err != nil {
+			logUnexpectedError(h.log, err, transactHandlerOp)
+		}
+
+		resp.statusCode = statusCode
+		resp.response.Msg = msg
 		return
 	}
 
 	ctx := req.Context()
 	balance, err := h.balanceGetter.Serve(ctx, walletID)
 	if err != nil {
-		statusCode, msg := serviceErrorToCodeAndMsg(err)
+		statusCode, msg, err := serviceErrorToCodeAndMsg(err)
+		if err != nil {
+			logUnexpectedError(h.log, err, transactHandlerOp)
+		}
+
 		resp.statusCode = statusCode
-		resp.respData.Msg = msg
+		resp.response.Msg = msg
 		return
 	}
 
 	resp.statusCode = http.StatusOK
-	resp.respData.Success = true
-	resp.respData.Msg = balanceGotFetchedMsg
-	resp.respData.Data = newGetBalanceData(balance)
+	resp.response.Success = true
+	resp.response.Msg = balanceFetchedMsg
+	resp.response.Data = newGetBalanceData(balance)
 }

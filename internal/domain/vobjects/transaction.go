@@ -1,7 +1,6 @@
 package vobjects
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -11,8 +10,6 @@ const (
 	DepositTx  = "DEPOSIT"
 	WithdrawTx = "WITHDRAW"
 )
-
-var ErrInvalidOperationType = errors.New("invalid operationType")
 
 func NewOperationType(opType string) (OperationType, error) {
 	if opType == DepositTx || opType == WithdrawTx {
@@ -49,6 +46,10 @@ func NewTransaction(args NewTransactionArgs) (
 	opType, err := NewOperationType(args.OperationType)
 	if err != nil {
 		return tx, err
+	}
+
+	if args.Amount <= 0 {
+		return tx, ErrInvalidAmount
 	}
 
 	tx.WalletID = walletID
